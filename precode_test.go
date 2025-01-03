@@ -87,14 +87,10 @@ func TestMainHandlerWhenCountMoreThanTotal(t *testing.T) {
     handler := http.HandlerFunc(mainHandle)
     handler.ServeHTTP(responseRecorder, req)
 
-    if status := responseRecorder.Code; status != http.StatusOK {
-        t.Errorf("expected status code: %d, got %d", http.StatusOK, status)
-    }
+    require.Equal(t, responseRecorder.Code, http.StatusOK)
 
     body := responseRecorder.Body.String()
     list := strings.Split(body, ",")
 
-    if len(list) != totalCount {
-        t.Errorf("expected cafe count: %d, got %d", totalCount, len(list))
-    }
+    require.Equal(t, len(list), totalCount)
 }
