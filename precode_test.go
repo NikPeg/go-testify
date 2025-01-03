@@ -6,6 +6,7 @@ import (
     "strconv"
     "strings"
     "testing"
+    "github.com/stretchr/testify/require"
 )
 
 var cafeList = map[string][]string{
@@ -44,6 +45,42 @@ func mainHandle(w http.ResponseWriter, req *http.Request) {
 
     w.WriteHeader(http.StatusOK)
     w.Write([]byte(answer))
+}
+
+func TestCorrectRequest(t *testing.T) {
+    totalCount := 4
+    req := httptest.NewRequest("GET", "/cafe?city=moscow&count=" + strconv.Itoa(totalCount), nil)
+
+    responseRecorder := httptest.NewRecorder()
+    handler := http.HandlerFunc(mainHandle)
+    handler.ServeHTTP(responseRecorder, req)
+
+    require.Equal(t, responseRecorder.Code, http.StatusOK)
+
+    body := responseRecorder.Body.String()
+    list := strings.Split(body, ",")
+
+    require.Equal(t, len(list), totalCount)
+}
+
+func TestWrongCityValue(t *testing.T) {
+    totalCount := 4
+    req := httptest.NewRequest("GET", "/cafe?city=moscow&count=" + strconv.Itoa(totalCount + 1), nil)
+
+    responseRecorder := httptest.NewRecorder()
+    handler := http.HandlerFunc(mainHandle)
+    handler.ServeHTTP(responseRecorder, req)
+
+    if status := responseRecorder.Code; status != http.StatusOK {
+        t.Errorf("expected status code: %d, got %d", http.StatusOK, status)
+    }
+
+    body := responseRecorder.Body.String()
+    list := strings.Split(body, ",")
+
+    if len(list) != totalCount {
+        t.Errorf("expected cafe count: %d, got %d", totalCount, len(list))
+    }
 }
 
 func TestMainHandlerWhenCountMoreThanTotal(t *testing.T) {
